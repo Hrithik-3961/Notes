@@ -13,6 +13,10 @@ public class Note {
     private String description;
     private boolean pinned;
 
+    public Note() {
+        //required for Firebase
+    }
+
     public Note(String title, String description, boolean pinned) {
         this.title = title;
         this.description = description;
@@ -37,5 +41,17 @@ public class Note {
 
     public boolean isPinned() {
         return pinned;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setPinned(boolean pinned) {
+        this.pinned = pinned;
     }
 }
