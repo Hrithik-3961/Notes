@@ -33,7 +33,8 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
 
     public static final String path = "Uploads";
-    public static final int REQUEST_CODE = 1;
+    public static final int ADD_REQUEST_CODE = 1;
+    public static final int EDIT_REQUEST_CODE = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
         noteViewModel.getAllNotes().observe(this, new Observer<List<Note>>() {
             @Override
             public void onChanged(List<Note> notes) {
-                adapter.setNotes(notes);
+                adapter.submitList(notes);
             }
         });
 
@@ -59,8 +60,28 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this, AddNote.class);
-                startActivityForResult(intent, REQUEST_CODE);
+                Intent intent = new Intent(MainActivity.this, AddEditNote.class);
+                startActivityForResult(intent, ADD_REQUEST_CODE);
+            }
+        });
+
+        adapter.setOnClickListener(new NoteAdapter.OnClickListener() {
+            @Override
+            public void onItemClick(Note note) {
+                Intent intent = new Intent(MainActivity.this, AddEditNote.class);
+                intent.putExtra(AddEditNote.EXTRA_ID, note.getId());
+                intent.putExtra(AddEditNote.EXTRA_TITLE, note.getTitle());
+                intent.putExtra(AddEditNote.EXTRA_DESCRIPTION, note.getDescription());
+                intent.putExtra(AddEditNote.EXTRA_PINNED, note.isPinned());
+                startActivityForResult(intent, EDIT_REQUEST_CODE);
+
+            }
+        });
+
+        adapter.setLongClickListener(new NoteAdapter.OnLongClickListener() {
+            @Override
+            public void onLongClick(Note note) {
+
             }
         });
 
@@ -71,12 +92,34 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if(requestCode == REQUEST_CODE && resultCode == RESULT_OK){
-            String title = data.getStringExtra(AddNote.EXTRA_TITLE);
-            String description = data.getStringExtra(AddNote.EXTRA_DESCRIPTION);
+        if(requestCode == ADD_REQUEST_CODE && resultCode == RESULT_OK){
+            String title = data.getStringExtra(AddEditNote.EXTRA_TITLE);
+            String description = data.getStringExtra(AddEditNote.EXTRA_DESCRIPTION);
             Note note = new Note(title, description, false);
             noteViewModel.insert(note);
+            String uploadId = databaseReference.push().getKey();
+            databaseReference.child(uploadId).setValue(note);
         }
+        else if(requestCode == EDIT_REQUEST_CODE && resultCode == RESULT_OK){
+            int id = data.getIntExtra(AddEditNote.EXTRA_ID, -1);
+            if(id == -1) {
+                Toast.makeText(this, "Unable to update the note.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            String title = data.getStringExtra(AddEditNote.EXTRA_TITLE);
+            String description = data.getStringExtra(AddEditNote.EXTRA_DESCRIPTION);
+            boolean pinned = data.getBooleanExtra(AddEditNote.EXTRA_PINNED, false);
+            Note note = new Note(title, description, pinned);
+            note.setId(id);
+            noteViewModel.update(note);
+
+            //update the database
+            String uploadId = databaseReference.push().getKey();
+            databaseReference.child(uploadId).setValue(note);
+        }
+        else
+            Toast.makeText(this, "Unable to save the note.", Toast.LENGTH_SHORT).show();
     }
 
     private void retrieveNotes() {
