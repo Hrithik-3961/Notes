@@ -18,7 +18,10 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -40,13 +43,15 @@ public class MainActivity extends AppCompatActivity {
     private SearchView searchView;
     private Button delete;
     private Button close;
+    private Button logout;
     private TextView noNotes;
     private ItemTouchHelper helper;
 
     private boolean selection = false;
     private Map<Integer, View> map = new HashMap<>();
 
-    public static final String path = "Uploads";
+    private String path;
+
     public static final int ADD_REQUEST_CODE = 1;
     public static final int EDIT_REQUEST_CODE = 2;
 
@@ -59,7 +64,21 @@ public class MainActivity extends AppCompatActivity {
         searchView = findViewById(R.id.search_bar);
         delete = findViewById(R.id.delete);
         close = findViewById(R.id.close);
+        logout = findViewById(R.id.logout);
         noNotes = findViewById(R.id.no_notes);
+
+        GoogleSignInAccount signInAccount = GoogleSignIn.getLastSignedInAccount(this);
+        if(signInAccount != null)
+            path = signInAccount.getId() + ".Notes";
+
+        logout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                FirebaseAuth.getInstance().signOut();
+                startActivity(new Intent(MainActivity.this, Login.class));
+                finishAffinity();
+            }
+        });
 
         close.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -161,7 +180,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
         dragAndDrop();
-        //retrieveNotes();
     }
 
     @Override
@@ -198,25 +216,6 @@ public class MainActivity extends AppCompatActivity {
             noteViewModel.update(note);
             databaseReference.child(String.valueOf(id)).setValue(note);
         }
-    }
-
-    private void retrieveNotes() {
-
-        databaseReference.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-
-                for (DataSnapshot notesSnapshot : snapshot.getChildren()) {
-                    Note note = notesSnapshot.getValue(Note.class);
-                    noteViewModel.insert(note);
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(MainActivity.this, error.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
     }
 
     public void dragAndDrop() {
