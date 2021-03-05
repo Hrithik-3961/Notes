@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey;
 public class Note {
 
     @PrimaryKey(autoGenerate = true)
-    private int id;
+    private long id;
 
     private String title;
     private String description;
@@ -23,11 +23,11 @@ public class Note {
         this.pinned = pinned;
     }
 
-    public void setId(int id) {
+    public void setId(long id) {
         this.id = id;
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 

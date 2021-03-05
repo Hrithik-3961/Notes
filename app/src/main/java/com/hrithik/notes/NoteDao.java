@@ -13,7 +13,7 @@ import java.util.List;
 public interface NoteDao {
 
     @Insert
-    void insert(Note note);
+    long insert(Note note);
 
     @Update
     void update(Note note);
@@ -23,4 +23,7 @@ public interface NoteDao {
 
     @Query("SELECT * FROM Note")
     LiveData<List<Note>> getAllNotes();
+
+    @Query("SELECT * FROM Note ORDER BY id DESC LIMIT 1")
+    LiveData<Note> getLastNote();
 }

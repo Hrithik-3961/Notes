@@ -14,6 +14,7 @@ public class NoteAdapter extends ListAdapter<Note, NoteAdapter.NoteHolder> {
 
     public OnLongClickListener longClickListener;
     public OnClickListener onClickListener;
+
     public NoteAdapter() {
         super(DIFF_CALLBACK);
     }
@@ -47,9 +48,10 @@ public class NoteAdapter extends ListAdapter<Note, NoteAdapter.NoteHolder> {
         holder.title.setText(currentNote.getTitle());
         holder.description.setText(currentNote.getDescription());
         holder.pinned = currentNote.isPinned();
+
     }
 
-    public Note getNoteAt(int position){
+    public Note getNoteAt(int position) {
         return getItem(position);
     }
 
@@ -59,17 +61,18 @@ public class NoteAdapter extends ListAdapter<Note, NoteAdapter.NoteHolder> {
         private TextView description;
         private boolean pinned;
 
-        public NoteHolder(@NonNull View itemView) {
+        public NoteHolder(@NonNull final View itemView) {
             super(itemView);
             title = itemView.findViewById(R.id.title);
             description = itemView.findViewById(R.id.description);
 
+            itemView.setLongClickable(true);
             itemView.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View view) {
                     int position = getAdapterPosition();
-                    if(longClickListener != null && position != RecyclerView.NO_POSITION)
-                        longClickListener.onLongClick(getItem(position));
+                    if (longClickListener != null && position != RecyclerView.NO_POSITION)
+                        longClickListener.onLongClick(getItem(position), itemView, position);
                     return true;
                 }
             });
@@ -78,26 +81,28 @@ public class NoteAdapter extends ListAdapter<Note, NoteAdapter.NoteHolder> {
                 @Override
                 public void onClick(View view) {
                     int position = getAdapterPosition();
-                    if(onClickListener != null && position != RecyclerView.NO_POSITION)
-                        onClickListener.onItemClick(getItem(position));
+                    if (onClickListener != null && position != RecyclerView.NO_POSITION) {
+                        onClickListener.onItemClick(getItem(position), itemView, position);
+                    }
+
                 }
             });
         }
     }
 
     public interface OnLongClickListener {
-        void onLongClick(Note note);
+        void onLongClick(Note note, View item, int position);
     }
 
-    public void setLongClickListener(OnLongClickListener listener){
+    public void setLongClickListener(OnLongClickListener listener) {
         longClickListener = listener;
     }
 
     public interface OnClickListener {
-        void onItemClick(Note note);
+        void onItemClick(Note note, View item, int position);
     }
 
-    public void setOnClickListener(OnClickListener listener){
+    public void setOnClickListener(OnClickListener listener) {
         onClickListener = listener;
     }
 }

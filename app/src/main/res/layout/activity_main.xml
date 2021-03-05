@@ -5,11 +5,45 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <SearchView
+        android:id="@+id/search_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <Button
+        android:id="@+id/close"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@drawable/close"
+        android:backgroundTint="@android:color/black"
+        android:visibility="gone"/>
+
+    <Button
+        android:id="@+id/delete"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@drawable/delete"
+        android:backgroundTint="@android:color/black"
+        android:layout_alignParentEnd="true"
+        android:visibility="gone"
+        android:onClick="deleteNotes"/>
+
     <androidx.recyclerview.widget.RecyclerView
+        android:layout_below="@id/search_bar"
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginBottom="10dp"/>
+
+    <TextView
+        android:id="@+id/no_notes"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="No notes added"
+        android:textSize="25sp"
+        android:visibility="gone"
+        android:gravity="center"
+        android:layout_below="@id/search_bar"/>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/floating"

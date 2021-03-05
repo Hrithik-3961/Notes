@@ -49,7 +49,7 @@ public class AddEditNote extends AppCompatActivity {
         intent.putExtra(EXTRA_TITLE, title);
         intent.putExtra(EXTRA_DESCRIPTION, description);
 
-        int id = getIntent().getIntExtra(EXTRA_ID, -1);
+        long id = getIntent().getLongExtra(EXTRA_ID, -1);
         boolean pinned = getIntent().getBooleanExtra(EXTRA_PINNED, false);
         if (id != -1) {
             intent.putExtra(EXTRA_ID, id);

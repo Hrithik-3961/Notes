@@ -1,13 +1,8 @@
 package com.hrithik.notes;
 
 import android.app.Application;
-import android.content.Context;
-import android.os.AsyncTask;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.lifecycle.LiveData;
-import androidx.loader.content.AsyncTaskLoader;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -17,25 +12,31 @@ public class NoteRepository {
 
     private NoteDao noteDao;
     private LiveData<List<Note>> allNotes;
+    private LiveData<Note> lastNote;
+
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
-    public NoteRepository(Application application){
+    public NoteRepository(Application application) {
 
         NoteDatabase noteDatabase = NoteDatabase.getInstance(application);
         noteDao = noteDatabase.noteDao();
         allNotes = noteDao.getAllNotes();
+        lastNote = noteDao.getLastNote();
     }
 
-    public void insert(final Note note){
+    public long insert(final Note note) {
+        final long[] id = new long[1];
         executorService.execute(new Runnable() {
             @Override
             public void run() {
-                noteDao.insert(note);
+                id[0] = noteDao.insert(note);
             }
         });
+
+        return id[0];
     }
 
-    public void update(final Note note){
+    public void update(final Note note) {
         executorService.execute(new Runnable() {
             @Override
             public void run() {
@@ -44,7 +45,7 @@ public class NoteRepository {
         });
     }
 
-    public void delete(final Note note){
+    public void delete(final Note note) {
         executorService.execute(new Runnable() {
             @Override
             public void run() {
@@ -55,5 +56,9 @@ public class NoteRepository {
 
     public LiveData<List<Note>> getAllNotes() {
         return allNotes;
+    }
+
+    public LiveData<Note> getLastNote(){
+        return lastNote;
     }
 }
