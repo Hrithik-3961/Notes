@@ -2,8 +2,10 @@ package com.hrithik.notes;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.PopupMenu;
 import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -22,11 +24,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
 import java.util.HashMap;
 import java.util.List;
@@ -43,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private SearchView searchView;
     private Button delete;
     private Button close;
-    private Button logout;
+    private Button menu_button;
     private TextView noNotes;
     private ItemTouchHelper helper;
 
@@ -64,21 +63,12 @@ public class MainActivity extends AppCompatActivity {
         searchView = findViewById(R.id.search_bar);
         delete = findViewById(R.id.delete);
         close = findViewById(R.id.close);
-        logout = findViewById(R.id.logout);
+        menu_button = findViewById(R.id.menu);
         noNotes = findViewById(R.id.no_notes);
 
         GoogleSignInAccount signInAccount = GoogleSignIn.getLastSignedInAccount(this);
-        if(signInAccount != null)
-            path = signInAccount.getId() + ".Notes";
-
-        logout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                FirebaseAuth.getInstance().signOut();
-                startActivity(new Intent(MainActivity.this, Login.class));
-                finishAffinity();
-            }
-        });
+        if (signInAccount != null)
+            path = signInAccount.getId();
 
         close.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -92,7 +82,15 @@ public class MainActivity extends AppCompatActivity {
                 map = new HashMap<>();
                 delete.setVisibility(View.GONE);
                 searchView.setVisibility(View.VISIBLE);
+                menu_button.setVisibility(View.VISIBLE);
                 close.setVisibility(View.GONE);
+            }
+        });
+
+        menu_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showPopup();
             }
         });
 
@@ -142,6 +140,7 @@ public class MainActivity extends AppCompatActivity {
                             selection = false;
                             helper.attachToRecyclerView(recyclerView);
                             searchView.setVisibility(View.VISIBLE);
+                            menu_button.setVisibility(View.VISIBLE);
                             delete.setVisibility(View.GONE);
                             close.setVisibility(View.GONE);
                         }
@@ -174,6 +173,7 @@ public class MainActivity extends AppCompatActivity {
                 if (!map.containsKey(position))
                     map.put(position, item);
                 searchView.setVisibility(View.INVISIBLE);
+                menu_button.setVisibility(View.INVISIBLE);
                 delete.setVisibility(View.VISIBLE);
                 close.setVisibility(View.VISIBLE);
             }
@@ -251,7 +251,22 @@ public class MainActivity extends AppCompatActivity {
         map = new HashMap<>();
         delete.setVisibility(View.GONE);
         searchView.setVisibility(View.VISIBLE);
+        menu_button.setVisibility(View.VISIBLE);
         close.setVisibility(View.GONE);
     }
 
+    public void showPopup() {
+        PopupMenu menu = new PopupMenu(this, menu_button);
+        menu.inflate(R.menu.popup_menu);
+        menu.show();
+        menu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem menuItem) {
+                FirebaseAuth.getInstance().signOut();
+                startActivity(new Intent(MainActivity.this, Login.class));
+                finishAffinity();
+                return true;
+            }
+        });
+    }
 }
