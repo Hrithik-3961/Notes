@@ -3,30 +3,33 @@ package com.hrithik.notes;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
-@Entity
+import com.google.firebase.database.Exclude;
+
+
+@Entity(tableName = "Notes")
 public class Note {
 
     @PrimaryKey(autoGenerate = true)
+    @Exclude
     private long id;
 
     private String title;
     private String description;
-    private boolean pinned;
 
     public Note() {
         //required for Firebase
     }
 
-    public Note(String title, String description, boolean pinned) {
+    public Note(String title, String description) {
         this.title = title;
         this.description = description;
-        this.pinned = pinned;
     }
 
     public void setId(long id) {
         this.id = id;
     }
 
+    @Exclude
     public long getId() {
         return id;
     }
@@ -39,10 +42,6 @@ public class Note {
         return description;
     }
 
-    public boolean isPinned() {
-        return pinned;
-    }
-
     public void setTitle(String title) {
         this.title = title;
     }
@@ -51,7 +50,4 @@ public class Note {
         this.description = description;
     }
 
-    public void setPinned(boolean pinned) {
-        this.pinned = pinned;
-    }
 }

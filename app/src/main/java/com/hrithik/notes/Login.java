@@ -4,11 +4,11 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -36,7 +36,7 @@ public class Login extends AppCompatActivity {
     private GoogleSignInClient mGoogleSignInClient;
     private FirebaseAuth mAuth;
 
-    private RelativeLayout relativeLayout;
+    private ConstraintLayout constraintLayout;
     private Button signIn;
 
     @Override
@@ -56,7 +56,7 @@ public class Login extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         mAuth = FirebaseAuth.getInstance();
-        relativeLayout = findViewById(R.id.relativeLayout);
+        constraintLayout = findViewById(R.id.relativeLayout);
 
         createRequest();
 
@@ -110,7 +110,7 @@ public class Login extends AppCompatActivity {
                             startActivity(new Intent(Login.this, MainActivity.class));
                             finishAffinity();
                         } else {
-                            Snackbar.make(relativeLayout, "Authentication Failed.", Snackbar.LENGTH_SHORT).show();
+                            Snackbar.make(constraintLayout, "Authentication Failed.", Snackbar.LENGTH_SHORT).show();
                         }
                     }
                 });
@@ -121,15 +121,15 @@ public class Login extends AppCompatActivity {
         GoogleSignInAccount signInAccount = GoogleSignIn.getLastSignedInAccount(this);
         String path = "";
         if(signInAccount != null)
-            path = signInAccount.getId() + ".Notes";
+            path = signInAccount.getId();
 
         FirebaseDatabase.getInstance("https://notes-bd749-default-rtdb.firebaseio.com/").setPersistenceEnabled(true);
         DatabaseReference databaseReference = FirebaseDatabase.getInstance("https://notes-bd749-default-rtdb.firebaseio.com/").getReference(path);
         databaseReference.keepSynced(true);
 
         final NoteViewModel noteViewModel = new ViewModelProvider(this, new NoteViewModelFactory(getApplication())).get(NoteViewModel.class);
-
-        databaseReference.addValueEventListener(new ValueEventListener() {
+        noteViewModel.clearAllTables();
+        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
 

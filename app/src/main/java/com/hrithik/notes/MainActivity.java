@@ -6,7 +6,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.PopupMenu;
-import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,10 +38,9 @@ public class MainActivity extends AppCompatActivity {
 
     private FloatingActionButton fab;
     private RecyclerView recyclerView;
-    private SearchView searchView;
     private Button delete;
     private Button close;
-    private Button menu_button;
+    private TextView notesTitle;
     private TextView noNotes;
     private ItemTouchHelper helper;
 
@@ -60,10 +58,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         recyclerView = findViewById(R.id.recyclerView);
-        searchView = findViewById(R.id.search_bar);
         delete = findViewById(R.id.delete);
         close = findViewById(R.id.close);
-        menu_button = findViewById(R.id.menu);
+        notesTitle = findViewById(R.id.notesTitle);
         noNotes = findViewById(R.id.no_notes);
 
         GoogleSignInAccount signInAccount = GoogleSignIn.getLastSignedInAccount(this);
@@ -81,40 +78,31 @@ public class MainActivity extends AppCompatActivity {
                 helper.attachToRecyclerView(recyclerView);
                 map = new HashMap<>();
                 delete.setVisibility(View.GONE);
-                searchView.setVisibility(View.VISIBLE);
-                menu_button.setVisibility(View.VISIBLE);
+                notesTitle.setVisibility(View.VISIBLE);
                 close.setVisibility(View.GONE);
-            }
-        });
-
-        menu_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showPopup();
             }
         });
 
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
 
-        FirebaseDatabase.getInstance("https://notes-bd749-default-rtdb.firebaseio.com/").setPersistenceEnabled(true);
-        databaseReference = FirebaseDatabase.getInstance("https://notes-bd749-default-rtdb.firebaseio.com/").getReference(path);
-        databaseReference.keepSynced(true);
+        databaseReference = FirebaseDatabase.getInstance().getReference(path);
 
         adapter = new NoteAdapter();
         recyclerView.setAdapter(adapter);
 
         noteViewModel = new ViewModelProvider(this, new NoteViewModelFactory(getApplication())).get(NoteViewModel.class);
+
         noteViewModel.getAllNotes().observe(this, new Observer<List<Note>>() {
             @Override
             public void onChanged(List<Note> notes) {
                 adapter.submitList(notes);
-                if (noNotes.getVisibility() == View.VISIBLE) {
-                    recyclerView.setVisibility(View.VISIBLE);
-                    noNotes.setVisibility(View.GONE);
-                } else {
+                if (notes.isEmpty()) {
                     recyclerView.setVisibility(View.GONE);
                     noNotes.setVisibility(View.VISIBLE);
+                } else {
+                    recyclerView.setVisibility(View.VISIBLE);
+                    noNotes.setVisibility(View.GONE);
                 }
             }
         });
@@ -139,8 +127,7 @@ public class MainActivity extends AppCompatActivity {
                         if (map == null || map.size() == 0) {
                             selection = false;
                             helper.attachToRecyclerView(recyclerView);
-                            searchView.setVisibility(View.VISIBLE);
-                            menu_button.setVisibility(View.VISIBLE);
+                            notesTitle.setVisibility(View.VISIBLE);
                             delete.setVisibility(View.GONE);
                             close.setVisibility(View.GONE);
                         }
@@ -155,7 +142,6 @@ public class MainActivity extends AppCompatActivity {
                     intent.putExtra(AddEditNote.EXTRA_ID, note.getId());
                     intent.putExtra(AddEditNote.EXTRA_TITLE, note.getTitle());
                     intent.putExtra(AddEditNote.EXTRA_DESCRIPTION, note.getDescription());
-                    intent.putExtra(AddEditNote.EXTRA_PINNED, note.isPinned());
                     startActivityForResult(intent, EDIT_REQUEST_CODE);
                 }
 
@@ -172,10 +158,19 @@ public class MainActivity extends AppCompatActivity {
                 item.setSelected(true);
                 if (!map.containsKey(position))
                     map.put(position, item);
-                searchView.setVisibility(View.INVISIBLE);
-                menu_button.setVisibility(View.INVISIBLE);
+                notesTitle.setVisibility(View.INVISIBLE);
                 delete.setVisibility(View.VISIBLE);
                 close.setVisibility(View.VISIBLE);
+            }
+        });
+
+        noteViewModel.getLastNote().observe(this, new Observer<Note>() {
+            @Override
+            public void onChanged(Note note) {
+                if (note != null) {
+                    long id = note.getId();
+                    databaseReference.child(String.valueOf(id)).setValue(note);
+                }
             }
         });
 
@@ -183,23 +178,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == ADD_REQUEST_CODE && resultCode == RESULT_OK) {
 
             String title = data.getStringExtra(AddEditNote.EXTRA_TITLE);
             String description = data.getStringExtra(AddEditNote.EXTRA_DESCRIPTION);
-            Note note = new Note(title, description, false);
+            Note note = new Note(title, description);
             noteViewModel.insert(note);
-            final long[] id = {-1};
-            noteViewModel.getLastNote().observe(this, new Observer<Note>() {
-                @Override
-                public void onChanged(Note note) {
-                    id[0] = note.getId();
-                    databaseReference.child(String.valueOf(id[0])).setValue(note);
-                }
-            });
 
         } else if (requestCode == EDIT_REQUEST_CODE && resultCode == RESULT_OK) {
             long id = data.getLongExtra(AddEditNote.EXTRA_ID, -1);
@@ -210,11 +197,10 @@ public class MainActivity extends AppCompatActivity {
 
             String title = data.getStringExtra(AddEditNote.EXTRA_TITLE);
             String description = data.getStringExtra(AddEditNote.EXTRA_DESCRIPTION);
-            boolean pinned = data.getBooleanExtra(AddEditNote.EXTRA_PINNED, false);
-            Note note = new Note(title, description, pinned);
+            Note note = new Note(title, description);
             note.setId(id);
             noteViewModel.update(note);
-            databaseReference.child(String.valueOf(id)).setValue(note);
+            databaseReference.child(String.valueOf(note.getId())).setValue(note);
         }
     }
 
@@ -250,23 +236,8 @@ public class MainActivity extends AppCompatActivity {
         }
         map = new HashMap<>();
         delete.setVisibility(View.GONE);
-        searchView.setVisibility(View.VISIBLE);
-        menu_button.setVisibility(View.VISIBLE);
+        notesTitle.setVisibility(View.VISIBLE);
         close.setVisibility(View.GONE);
     }
 
-    public void showPopup() {
-        PopupMenu menu = new PopupMenu(this, menu_button);
-        menu.inflate(R.menu.popup_menu);
-        menu.show();
-        menu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem menuItem) {
-                FirebaseAuth.getInstance().signOut();
-                startActivity(new Intent(MainActivity.this, Login.class));
-                finishAffinity();
-                return true;
-            }
-        });
-    }
 }

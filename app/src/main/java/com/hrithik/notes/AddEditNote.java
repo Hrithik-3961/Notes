@@ -8,9 +8,6 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-
 public class AddEditNote extends AppCompatActivity {
 
     private EditText editTextTitle;
@@ -19,7 +16,6 @@ public class AddEditNote extends AppCompatActivity {
     public static final String EXTRA_ID = "EXTRA_ID";
     public static final String EXTRA_TITLE = "EXTRA_TITLE";
     public static final String EXTRA_DESCRIPTION = "EXTRA_DESCRIPTION";
-    public static final String EXTRA_PINNED = "EXTRA_PINNED";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,8 +36,8 @@ public class AddEditNote extends AppCompatActivity {
         String title = editTextTitle.getText().toString().trim();
         String description = editTextDescription.getText().toString().trim();
 
-        if (title.isEmpty() || description.isEmpty()) {
-            Toast.makeText(this, "Cannot save note without title or description", Toast.LENGTH_SHORT).show();
+        if(title.isEmpty() || description.isEmpty()){
+            Toast.makeText(this, "Title and Description cannot be empty", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -50,11 +46,8 @@ public class AddEditNote extends AppCompatActivity {
         intent.putExtra(EXTRA_DESCRIPTION, description);
 
         long id = getIntent().getLongExtra(EXTRA_ID, -1);
-        boolean pinned = getIntent().getBooleanExtra(EXTRA_PINNED, false);
-        if (id != -1) {
+        if (id != -1)
             intent.putExtra(EXTRA_ID, id);
-            intent.putExtra(EXTRA_PINNED, pinned);
-        }
 
         setResult(RESULT_OK, intent);
         finish();

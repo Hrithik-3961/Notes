@@ -13,12 +13,13 @@ public class NoteRepository {
     private NoteDao noteDao;
     private LiveData<List<Note>> allNotes;
     private LiveData<Note> lastNote;
+    private NoteDatabase noteDatabase;
 
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     public NoteRepository(Application application) {
 
-        NoteDatabase noteDatabase = NoteDatabase.getInstance(application);
+        noteDatabase = NoteDatabase.getInstance(application);
         noteDao = noteDatabase.noteDao();
         allNotes = noteDao.getAllNotes();
         lastNote = noteDao.getLastNote();
@@ -50,6 +51,15 @@ public class NoteRepository {
             @Override
             public void run() {
                 noteDao.delete(note);
+            }
+        });
+    }
+
+    public void clearAllTables(){
+        executorService.execute(new Runnable() {
+            @Override
+            public void run() {
+                noteDatabase.clearAllTables();
             }
         });
     }

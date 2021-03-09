@@ -47,8 +47,6 @@ public class NoteAdapter extends ListAdapter<Note, NoteAdapter.NoteHolder> {
 
         holder.title.setText(currentNote.getTitle());
         holder.description.setText(currentNote.getDescription());
-        holder.pinned = currentNote.isPinned();
-
     }
 
     public Note getNoteAt(int position) {
@@ -59,7 +57,6 @@ public class NoteAdapter extends ListAdapter<Note, NoteAdapter.NoteHolder> {
 
         private TextView title;
         private TextView description;
-        private boolean pinned;
 
         public NoteHolder(@NonNull final View itemView) {
             super(itemView);
